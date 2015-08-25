@@ -70,9 +70,11 @@ static int const kOpenUDIDRedundancySlots = 100;
 
 
 @interface BMOpenUDID (Private)
+
 + (void)_setDict:(id)dict forPasteboard:(id)pboard;
-+ (NSMutableDictionary*)_getDictFromPasteboard:(id)pboard;
-+ (NSString*)_generateFreshOpenUDID;
++ (NSMutableDictionary *)_getDictFromPasteboard:(id)pboard;
++ (NSString *)_generateFreshOpenUDID;
+
 @end
 
 
@@ -181,9 +183,9 @@ static int const kOpenUDIDRedundancySlots = 100;
     if (_openUDID == nil) {
         CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
         CFStringRef cfstring = CFUUIDCreateString(kCFAllocatorDefault, uuid);
-        const char * cStr = CFStringGetCStringPtr(cfstring,CFStringGetFastestEncoding(cfstring));
+        const char * cStr = CFStringGetCStringPtr(cfstring, CFStringGetFastestEncoding(cfstring));
         unsigned char result[16];
-        CC_MD5( cStr, strlen(cStr), result );
+        CC_MD5(cStr, (CC_LONG)strlen(cStr), result);
         CFRelease(uuid);
         CFRelease(cfstring);
         
@@ -231,7 +233,7 @@ static int const kOpenUDIDRedundancySlots = 100;
     
     // The AppUID will uniquely identify this app within the pastebins
     //
-    NSString * appUID = [defaults objectForKey:kOpenUDIDAppUIDKey];
+    NSString *appUID = [defaults objectForKey:kOpenUDIDAppUIDKey];
     if (appUID == nil) {
         // generate a new uuid and store it in user defaults
         CFUUIDRef uuid = CFUUIDCreate(NULL);
@@ -265,7 +267,7 @@ static int const kOpenUDIDRedundancySlots = 100;
     NSString *availableSlotPBid = nil;
     NSMutableDictionary *frequencyDict = [NSMutableDictionary dictionaryWithCapacity:kOpenUDIDRedundancySlots];
     for (int n = 0; n < kOpenUDIDRedundancySlots; n++) {
-        NSString *slotPBid = [NSString stringWithFormat:@"%@%d",kOpenUDIDSlotPBPrefix, n];
+        NSString *slotPBid = [NSString stringWithFormat:@"%@%d", kOpenUDIDSlotPBPrefix, n];
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
         UIPasteboard *slotPB = [UIPasteboard pasteboardWithName:slotPBid create:NO];
 #else
@@ -280,7 +282,7 @@ static int const kOpenUDIDRedundancySlots = 100;
         } else {
             NSDictionary *dict = [BMOpenUDID _getDictFromPasteboard:slotPB];
             NSString *oudid = [dict objectForKey:kOpenUDIDKey];
-            OpenUDIDLog(@"SlotPB dict = %@",dict);
+            OpenUDIDLog(@"SlotPB dict = %@", dict);
             if (oudid==nil) {
                 // availableSlotPBid could inside a non null slot where no oudid can be found
                 if (availableSlotPBid==nil) {
@@ -309,7 +311,7 @@ static int const kOpenUDIDRedundancySlots = 100;
     // highest is last in the list
     //
     NSArray *arrayOfUDIDs = [frequencyDict keysSortedByValueUsingSelector:@selector(compare:)];
-    NSString *mostReliableOpenUDID = (arrayOfUDIDs!=nil && [arrayOfUDIDs count]>0)? [arrayOfUDIDs lastObject] : nil;
+    NSString * mostReliableOpenUDID = (arrayOfUDIDs != nil && [arrayOfUDIDs count] > 0) ? [arrayOfUDIDs lastObject] : nil;
     OpenUDIDLog(@"Freq Dict = %@\nMost reliable %@", frequencyDict,mostReliableOpenUDID);
     
     // if openUDID was not retrieved from the local preferences, then let's try to get it from the frequency dictionary above
@@ -347,7 +349,7 @@ static int const kOpenUDIDRedundancySlots = 100;
     
     // Here we store in the available PB slot, if applicable
     //
-    OpenUDIDLog(@"Available Slot %@ Existing Slot %@",availableSlotPBid, myRedundancySlotPBid);
+    OpenUDIDLog(@"Available Slot %@ Existing Slot %@", availableSlotPBid, myRedundancySlotPBid);
     if (availableSlotPBid!=nil && (myRedundancySlotPBid==nil || [availableSlotPBid isEqualToString:myRedundancySlotPBid])) {
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
         UIPasteboard *slotPB = [UIPasteboard pasteboardWithName:availableSlotPBid create:YES];
@@ -384,8 +386,8 @@ static int const kOpenUDIDRedundancySlots = 100;
     if (optedOut) {
         if (error != nil) {
             *error = [NSError errorWithDomain:kOpenUDIDDomain
-                                                     code:kOpenUDIDErrorOptedOut
-                                                 userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithFormat:@"Application with unique id %@ is opted-out from OpenUDID as of %@",appUID,optedOutDate],@"description", nil]];
+                                         code:kOpenUDIDErrorOptedOut
+                                     userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithFormat:@"Application with unique id %@ is opted-out from OpenUDID as of %@", appUID,optedOutDate],@"description", nil]];
         }
         kOpenUDIDSessionCache = [NSString stringWithFormat:@"%040x", 0];
         return kOpenUDIDSessionCache;
@@ -397,11 +399,11 @@ static int const kOpenUDIDRedundancySlots = 100;
         if (isCompromised) {
             *error = [NSError errorWithDomain:kOpenUDIDDomain
                                          code:kOpenUDIDErrorCompromised
-                                     userInfo:[NSDictionary dictionaryWithObjectsAndKeys:@"Found a discrepancy between stored OpenUDID (reliable) and redundant copies; one of the apps on the device is most likely corrupting the OpenUDID protocol",@"description", nil]];
+                                     userInfo:[NSDictionary dictionaryWithObjectsAndKeys:@"Found a discrepancy between stored OpenUDID (reliable) and redundant copies; one of the apps on the device is most likely corrupting the OpenUDID protocol", @"description", nil]];
         } else {
             *error = [NSError errorWithDomain:kOpenUDIDDomain
                                          code:kOpenUDIDErrorNone
-                                     userInfo:[NSDictionary dictionaryWithObjectsAndKeys:@"OpenUDID succesfully retrieved",@"description", nil]];
+                                     userInfo:[NSDictionary dictionaryWithObjectsAndKeys:@"OpenUDID succesfully retrieved", @"description", nil]];
         }
     }
     kOpenUDIDSessionCache = openUDID;
@@ -436,7 +438,7 @@ static int const kOpenUDIDRedundancySlots = 100;
     
     OpenUDIDLog(@"Local dict after opt-out = %@", dict);
     
-    // reset memory cache 
+    // reset memory cache
     kOpenUDIDSessionCache = nil;
     
 }
